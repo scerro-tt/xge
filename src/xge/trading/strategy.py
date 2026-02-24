@@ -6,6 +6,7 @@ from time import time
 
 from xge.cache.redis_cache import RedisCache
 from xge.config import TradingConfig
+from xge.models import OrderBookEntry
 from xge.models_funding import FundingRateEntry, SpotFundingArb, spot_to_perp
 from xge.models_trading import TradeSignal, Position
 from xge.trading.executor import TradeExecutor
@@ -35,6 +36,7 @@ class BasisTradeStrategy:
         self._symbols = symbols
         self._funding_poll_interval = funding_poll_interval
         self._running = False
+        self._cycle_count = 0
 
     async def run(self) -> None:
         """Main strategy loop."""
@@ -53,6 +55,9 @@ class BasisTradeStrategy:
             try:
                 await self._check_entries()
                 await self._check_exits()
+                self._cycle_count += 1
+                if self._cycle_count % 10 == 0:
+                    await self._log_pnl_summary()
             except Exception:
                 logger.exception("Error in strategy loop")
 
@@ -223,3 +228,34 @@ class BasisTradeStrategy:
             mode, position.symbol, position.exchange,
             position.realized_pnl, reason,
         )
+
+    async def _log_pnl_summary(self) -> None:
+        """Log a periodic P&L summary (realized + unrealized)."""
+        try:
+            # Realized P&L from trade history
+            history = await self._pm.get_trade_history()
+            realized_pnl = sum(t.realized_pnl for t in history)
+
+            # Unrealized P&L from open positions
+            open_positions = await self._pm.get_all_positions()
+            unrealized_pnl = 0.0
+            for pos in open_positions:
+                spot_raw = await self._cache.get_latest(pos.exchange, pos.symbol)
+                perp_raw = await self._cache.get_latest(pos.exchange, pos.perp_symbol)
+                if spot_raw and perp_raw:
+                    spot_book = OrderBookEntry.from_json(spot_raw)
+                    perp_book = OrderBookEntry.from_json(perp_raw)
+                    unrealized_pnl += pos.estimate_unrealized_pnl(
+                        spot_book.mid_price, perp_book.mid_price,
+                    )
+
+            total_pnl = realized_pnl + unrealized_pnl
+            mode = "PAPER" if self._executor.paper else "LIVE"
+            logger.warning(
+                "[P&L SUMMARY] [%s] realized=$%.4f (%d trades) | "
+                "unrealized=$%.4f (%d open) | total=$%.4f",
+                mode, realized_pnl, len(history),
+                unrealized_pnl, len(open_positions), total_pnl,
+            )
+        except Exception:
+            logger.exception("Error computing P&L summary")

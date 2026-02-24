@@ -97,6 +97,12 @@ class Position:
         perp_pnl = (self.perp_entry_price - self.perp_exit_price) * self.perp_quantity
         return spot_pnl + perp_pnl + self.funding_collected
 
+    def estimate_unrealized_pnl(self, spot_price: float, perp_price: float) -> float:
+        """Estimate unrealized PnL for an open position given current prices."""
+        spot_pnl = (spot_price - self.spot_entry_price) * self.spot_quantity
+        perp_pnl = (self.perp_entry_price - perp_price) * self.perp_quantity
+        return spot_pnl + perp_pnl + self.funding_collected
+
     def to_json(self) -> str:
         return json.dumps(asdict(self))
 

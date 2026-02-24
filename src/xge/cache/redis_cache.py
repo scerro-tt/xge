@@ -83,6 +83,17 @@ class RedisCache:
         if self._redis:
             await self._redis.delete(key)
 
+    async def rpush(self, key: str, data: str) -> None:
+        """Append a value to a Redis list."""
+        if self._redis:
+            await self._redis.rpush(key, data)
+
+    async def lrange(self, key: str, start: int, stop: int) -> list[str]:
+        """Read a range from a Redis list."""
+        if self._redis:
+            return await self._redis.lrange(key, start, stop)
+        return []
+
     async def scan_keys(self, pattern: str) -> list[str]:
         """Scan for keys matching a pattern."""
         keys: list[str] = []

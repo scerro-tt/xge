@@ -33,8 +33,10 @@ class PositionManager:
         """Save a position to Redis. Remove key if closed."""
         if position.status == "closed":
             await self._cache.delete(position.redis_key)
+            await self._cache.rpush("trade_history", position.to_json())
             logger.info(
-                "Removed closed position %s from Redis", position.redis_key,
+                "Removed closed position %s from Redis (persisted to trade_history)",
+                position.redis_key,
             )
         else:
             await self._cache.set(position.redis_key, position.to_json())
@@ -80,3 +82,8 @@ class PositionManager:
             return False, f"Max total positions reached ({self._max_total})"
 
         return True, "ok"
+
+    async def get_trade_history(self) -> list[Position]:
+        """Read all closed trades from the persistent trade_history list."""
+        raw_list = await self._cache.lrange("trade_history", 0, -1)
+        return [Position.from_json(raw) for raw in raw_list]
