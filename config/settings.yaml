@@ -3,22 +3,22 @@ exchanges:
     enabled: false  # geo-blocked from US cloud servers (Railway)
     taker_fee_pct: 0.10
   - id: kraken
-    enabled: true
+    enabled: false  # disabled to reduce memory (not used for trading)
     taker_fee_pct: 0.26
   - id: bybit
     enabled: false  # geo-blocked from US cloud servers (Railway)
     taker_fee_pct: 0.10
   - id: gate
-    enabled: true
+    enabled: false  # disabled to reduce memory (not used for trading)
     taker_fee_pct: 0.20
   - id: mexc
     enabled: true
     taker_fee_pct: 0.10
   - id: kucoin
-    enabled: true
+    enabled: false  # disabled to reduce memory (not used for trading)
     taker_fee_pct: 0.10
   - id: htx
-    enabled: true
+    enabled: false  # disabled to reduce memory (not used for trading)
     taker_fee_pct: 0.20
   - id: okx
     enabled: true
@@ -34,31 +34,15 @@ symbols:
   - DOGE/USDT
   - AVAX/USDT
   - LINK/USDT
-  - POL/USDT
-  - ADA/USDT
-  - DOT/USDT
   - XRP/USDT
-  - NEAR/USDT
-  - APT/USDT
+  - ADA/USDT
   - ARB/USDT
   - OP/USDT
-  - FIL/USDT
-  - ATOM/USDT
-  - UNI/USDT
-  - AAVE/USDT
-  # Low-cap / higher-spread tokens
-  - PENDLE/USDT
-  - TIA/USDT
-  - SEI/USDT
-  - JTO/USDT
-  - STRK/USDT
+  - NEAR/USDT
+  - APT/USDT
   - WLD/USDT
-  - PYTH/USDT
-  # Stablecoin arbitrage
-  - USDC/USDT
-  - DAI/USDT
-  - FDUSD/USDT
-  - TUSD/USDT
+  - PENDLE/USDT
+  - SEI/USDT
 
 logging:
   level: INFO

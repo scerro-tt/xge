@@ -63,7 +63,7 @@ class WSPriceCollector(BasePriceCollector):
 
         while self._running:
             try:
-                ob = await self._exchange.watch_order_book(symbol)
+                ob = await self._exchange.watch_order_book(symbol, limit=5)
 
                 if not ob["bids"] or not ob["asks"]:
                     continue
