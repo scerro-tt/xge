@@ -1,0 +1,79 @@
+exchanges:
+  - id: binance
+    enabled: true
+    taker_fee_pct: 0.10
+  - id: kraken
+    enabled: true
+    taker_fee_pct: 0.26
+  - id: bybit
+    enabled: true
+    taker_fee_pct: 0.10
+  - id: gate
+    enabled: true
+    taker_fee_pct: 0.20
+  - id: mexc
+    enabled: true
+    taker_fee_pct: 0.10
+  - id: kucoin
+    enabled: true
+    taker_fee_pct: 0.10
+  - id: htx
+    enabled: true
+    taker_fee_pct: 0.20
+  - id: okx
+    enabled: true
+    taker_fee_pct: 0.10
+  - id: bitget
+    enabled: true
+    taker_fee_pct: 0.10
+
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - SOL/USDT
+  - DOGE/USDT
+  - AVAX/USDT
+  - LINK/USDT
+  - POL/USDT
+  - ADA/USDT
+  - DOT/USDT
+  - XRP/USDT
+  - NEAR/USDT
+  - APT/USDT
+  - ARB/USDT
+  - OP/USDT
+  - FIL/USDT
+  - ATOM/USDT
+  - UNI/USDT
+  - AAVE/USDT
+  # Low-cap / higher-spread tokens
+  - PENDLE/USDT
+  - TIA/USDT
+  - SEI/USDT
+  - JTO/USDT
+  - STRK/USDT
+  - WLD/USDT
+  - PYTH/USDT
+  # Stablecoin arbitrage
+  - USDC/USDT
+  - DAI/USDT
+  - FDUSD/USDT
+  - TUSD/USDT
+
+logging:
+  level: INFO
+  heartbeat_interval: 5  # seconds between spread log reports
+  min_net_spread: -0.05  # only log spreads with net_spread >= this value
+
+redis:
+  host: ${REDIS_HOST:-localhost}
+  port: ${REDIS_PORT:-6379}
+
+funding:
+  enabled: true
+  poll_interval: 300
+  log_interval: 60
+  min_annualized_pct: 5.0
+  min_cross_spread_pct: 0.005
+  excluded_exchanges:
+    - kraken
