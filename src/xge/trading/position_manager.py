@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from time import time
 
 from xge.cache.redis_cache import RedisCache
 from xge.models_trading import Position
@@ -39,8 +40,8 @@ class PositionManager:
                 position.redis_key,
             )
         else:
-            await self._cache.set(position.redis_key, position.to_json())
-            logger.info("Saved position %s", position.redis_key)
+            await self._cache.set(position.redis_key, position.to_json(), ex=7 * 86400)
+            logger.info("Saved position %s (TTL=7d)", position.redis_key)
 
     async def get_all_positions(
         self, exchange: str | None = None,
@@ -82,6 +83,25 @@ class PositionManager:
             return False, f"Max total positions reached ({self._max_total})"
 
         return True, "ok"
+
+    async def reconcile_positions(self, max_age_seconds: float = 7 * 86400) -> int:
+        """Close stale positions that survived a deploy. Returns count of cleaned positions."""
+        positions = await self.get_all_positions()
+        now = time()
+        cleaned = 0
+        for pos in positions:
+            if now - pos.opened_at > max_age_seconds:
+                pos.status = "stale_closed"
+                pos.closed_at = now
+                pos.realized_pnl = 0.0
+                await self._cache.delete(pos.redis_key)
+                await self._cache.rpush("trade_history", pos.to_json())
+                logger.warning(
+                    "Reconciled stale position %s (age: %.1f hours)",
+                    pos.redis_key, (now - pos.opened_at) / 3600,
+                )
+                cleaned += 1
+        return cleaned
 
     async def get_trade_history(self) -> list[Position]:
         """Read all closed trades from the persistent trade_history list."""

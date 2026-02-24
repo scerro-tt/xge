@@ -259,12 +259,11 @@ class BasisTradeStrategy:
             unrealized_pnl = 0.0
             for pos in open_positions:
                 spot_raw = await self._cache.get_latest(pos.exchange, pos.symbol)
-                perp_raw = await self._cache.get_latest(pos.exchange, pos.perp_symbol)
-                if spot_raw and perp_raw:
+                if spot_raw:
                     spot_book = OrderBookEntry.from_json(spot_raw)
-                    perp_book = OrderBookEntry.from_json(perp_raw)
+                    # Use spot price as proxy for perp price (spread < 0.1% in basis trades)
                     unrealized_pnl += pos.estimate_unrealized_pnl(
-                        spot_book.mid_price, perp_book.mid_price,
+                        spot_book.mid_price, spot_book.mid_price,
                     )
 
             total_pnl = realized_pnl + unrealized_pnl

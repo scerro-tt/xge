@@ -229,6 +229,11 @@ async def run() -> None:
             max_total_positions=settings.trading.max_total_positions,
         )
 
+        # Reconcile stale positions from previous deploys
+        cleaned = await position_manager.reconcile_positions()
+        if cleaned:
+            logger.warning("Reconciled %d stale positions from previous deploy", cleaned)
+
         # Determine which exchanges to trade on
         if settings.trading.exchanges:
             trading_exchange_ids = settings.trading.exchanges
