@@ -1,12 +1,12 @@
 exchanges:
   - id: binance
-    enabled: true
+    enabled: false  # geo-blocked from US cloud servers (Railway)
     taker_fee_pct: 0.10
   - id: kraken
     enabled: true
     taker_fee_pct: 0.26
   - id: bybit
-    enabled: true
+    enabled: false  # geo-blocked from US cloud servers (Railway)
     taker_fee_pct: 0.10
   - id: gate
     enabled: true
@@ -90,7 +90,6 @@ trading:
   max_total_positions: 50
   check_interval: 60
   exchanges:
-    - bybit
     - okx
     - bitget
     - mexc

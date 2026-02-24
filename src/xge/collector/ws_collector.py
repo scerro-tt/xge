@@ -56,6 +56,11 @@ class WSPriceCollector(BasePriceCollector):
 
     async def _watch_symbol(self, symbol: str) -> None:
         """Continuously watch a single symbol's order book."""
+        backoff = 1
+        max_backoff = 300  # 5 minutes max
+        consecutive_errors = 0
+        max_consecutive_errors = 10  # stop after 10 consecutive failures
+
         while self._running:
             try:
                 ob = await self._exchange.watch_order_book(symbol)
@@ -77,17 +82,47 @@ class WSPriceCollector(BasePriceCollector):
                 await self.cache.publish(channel, entry.to_json())
                 await self.cache.set_latest(self.exchange_id, symbol, entry.to_json())
 
+                # Reset backoff on success
+                backoff = 1
+                consecutive_errors = 0
+
             except ccxt.BadSymbol:
                 logger.warning(
                     "Symbol %s not available on %s, skipping permanently",
                     symbol, self.exchange_id,
                 )
                 return
+            except (ccxt.ExchangeNotAvailable, ccxt.ExchangeError) as e:
+                if not self._running:
+                    break
+                consecutive_errors += 1
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error(
+                        "Too many consecutive errors for %s on %s (%s). "
+                        "Exchange may be geo-blocked. Giving up.",
+                        symbol, self.exchange_id, e,
+                    )
+                    return
+                logger.warning(
+                    "Exchange error for %s on %s: %s. Retrying in %ds (%d/%d)",
+                    symbol, self.exchange_id, e, backoff,
+                    consecutive_errors, max_consecutive_errors,
+                )
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, max_backoff)
             except Exception as e:
                 if not self._running:
                     break
+                consecutive_errors += 1
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error(
+                        "Too many consecutive errors for %s on %s. Giving up.",
+                        symbol, self.exchange_id,
+                    )
+                    return
                 logger.error(
-                    "Error watching %s on %s: %s. Reconnecting...",
-                    symbol, self.exchange_id, e,
+                    "Error watching %s on %s: %s. Retrying in %ds",
+                    symbol, self.exchange_id, e, backoff,
                 )
-                await asyncio.sleep(1)
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, max_backoff)

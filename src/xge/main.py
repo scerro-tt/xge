@@ -180,8 +180,14 @@ async def run() -> None:
             symbols=settings.symbols,
             cache=cache,
         )
-        await collector.connect()
-        collectors.append(collector)
+        try:
+            await collector.connect()
+            collectors.append(collector)
+        except Exception as e:
+            logger.warning(
+                "Failed to connect price collector for %s: %s (skipping)",
+                exchange_cfg.id, e,
+            )
 
     # Funding rate collectors
     funding_collectors: list[FundingRateCollector] = []
