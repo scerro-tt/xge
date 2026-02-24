@@ -201,8 +201,14 @@ async def run() -> None:
                 cache=cache,
                 poll_interval=settings.funding.poll_interval,
             )
-            await fc.connect()
-            funding_collectors.append(fc)
+            try:
+                await fc.connect()
+                funding_collectors.append(fc)
+            except Exception as e:
+                logger.warning(
+                    "Failed to connect funding collector for %s: %s (skipping)",
+                    exchange_cfg.id, e,
+                )
 
     # Basis trade strategy
     trading_strategy = None

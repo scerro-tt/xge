@@ -78,6 +78,7 @@ funding:
   min_cross_spread_pct: 0.005
   excluded_exchanges:
     - kraken
+    - binance
 
 trading:
   enabled: true
@@ -89,7 +90,6 @@ trading:
   max_total_positions: 50
   check_interval: 60
   exchanges:
-    - binance
     - bybit
     - okx
     - bitget
