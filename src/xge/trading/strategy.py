@@ -169,7 +169,48 @@ class BasisTradeStrategy:
         for position in positions:
             if position.status != "open":
                 continue
+            await self._accumulate_funding(position)
             await self._evaluate_exit(position)
+
+    async def _accumulate_funding(self, position: Position) -> None:
+        """Accumulate funding payments for an open position."""
+        raw = await self._cache.get_funding(position.exchange, position.symbol)
+        if not raw:
+            return
+
+        entry = FundingRateEntry.from_json(raw)
+
+        # Skip stale data
+        age = time() - entry.timestamp
+        if age > self._funding_poll_interval * 2:
+            return
+
+        # Get current price as mark price proxy
+        spot_raw = await self._cache.get_latest(position.exchange, position.symbol)
+        if not spot_raw:
+            return
+        spot_book = OrderBookEntry.from_json(spot_raw)
+        mark_price = spot_book.mid_price
+
+        now = time()
+        elapsed = now - position.last_funding_update
+
+        # funding_payment = perp_qty * mark_price * funding_rate * (elapsed / 28800)
+        # For short perp with positive funding, we collect (positive payment)
+        funding_payment = (
+            position.perp_quantity * mark_price * entry.funding_rate * (elapsed / 28800)
+        )
+
+        position.funding_collected += funding_payment
+        position.last_funding_update = now
+        await self._pm.save_position(position)
+
+        logger.debug(
+            "Funding accrual %s on %s: +$%.6f (rate=%.4f%%, total=$%.6f)",
+            position.symbol, position.exchange,
+            funding_payment, entry.funding_rate * 100,
+            position.funding_collected,
+        )
 
     async def _evaluate_exit(self, position: Position) -> None:
         """Evaluate a single position for exit."""

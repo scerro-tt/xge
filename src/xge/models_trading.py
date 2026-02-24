@@ -69,6 +69,7 @@ class Position:
     entry_funding_rate: float = 0.0
     entry_annualized_rate: float = 0.0
     funding_collected: float = 0.0
+    last_funding_update: float = 0.0
     opened_at: float = 0.0
     closed_at: float = 0.0
     realized_pnl: float = 0.0
@@ -77,6 +78,8 @@ class Position:
     def __post_init__(self) -> None:
         if self.opened_at == 0.0:
             self.opened_at = time()
+        if self.last_funding_update == 0.0:
+            self.last_funding_update = self.opened_at
 
     @property
     def redis_key(self) -> str:
