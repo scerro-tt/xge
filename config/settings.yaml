@@ -80,6 +80,12 @@ funding:
     - kraken
     - binance
 
+notifications:
+  enabled: true
+  resend_api_key: ${RESEND_API_KEY:-}
+  from_email: ${NOTIFY_FROM:-xge@resend.dev}
+  to_email: ${NOTIFY_EMAIL:-}
+
 trading:
   enabled: true
   paper_trading: true

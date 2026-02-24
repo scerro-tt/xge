@@ -241,6 +241,13 @@ async def run() -> None:
         for eid in trading_exchange_ids:
             await trading_executor.connect_exchange(eid)
 
+        # Email notifier
+        notifier = None
+        if settings.notifications.enabled and settings.notifications.resend_api_key:
+            from xge.notifications.email import EmailNotifier
+            notifier = EmailNotifier(settings.notifications)
+            logger.info("Email notifications enabled (to: %s)", settings.notifications.to_email)
+
         trading_strategy = BasisTradeStrategy(
             cache=cache,
             executor=trading_executor,
@@ -249,6 +256,7 @@ async def run() -> None:
             exchanges=trading_exchange_ids,
             symbols=settings.symbols,
             funding_poll_interval=settings.funding.poll_interval,
+            notifier=notifier,
         )
 
         mode = "PAPER" if settings.trading.paper_trading else "LIVE"

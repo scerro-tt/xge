@@ -41,6 +41,14 @@ class FundingConfig:
 
 
 @dataclass
+class NotificationsConfig:
+    enabled: bool = False
+    resend_api_key: str = ""
+    from_email: str = "xge@resend.dev"
+    to_email: str = ""
+
+
+@dataclass
 class TradingConfig:
     enabled: bool = False
     paper_trading: bool = True
@@ -60,6 +68,7 @@ class Settings:
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     redis: RedisConfig = field(default_factory=RedisConfig)
     funding: FundingConfig = field(default_factory=FundingConfig)
+    notifications: NotificationsConfig = field(default_factory=NotificationsConfig)
     trading: TradingConfig = field(default_factory=TradingConfig)
 
     @property
@@ -134,6 +143,14 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         excluded_exchanges=list(funding_raw.get("excluded_exchanges", [])),
     )
 
+    notif_raw = raw.get("notifications", {})
+    notifications_config = NotificationsConfig(
+        enabled=bool(notif_raw.get("enabled", False)),
+        resend_api_key=_resolve_env_vars(str(notif_raw.get("resend_api_key", ""))),
+        from_email=_resolve_env_vars(str(notif_raw.get("from_email", "xge@resend.dev"))),
+        to_email=_resolve_env_vars(str(notif_raw.get("to_email", ""))),
+    )
+
     trading_raw = raw.get("trading", {})
     trading_config = TradingConfig(
         enabled=bool(trading_raw.get("enabled", False)),
@@ -153,5 +170,6 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         logging=logging_config,
         redis=redis_config,
         funding=funding_config,
+        notifications=notifications_config,
         trading=trading_config,
     )

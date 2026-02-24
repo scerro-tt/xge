@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from time import time
+from typing import TYPE_CHECKING
 
 from xge.cache.redis_cache import RedisCache
 from xge.config import TradingConfig
@@ -11,6 +12,9 @@ from xge.models_funding import FundingRateEntry, SpotFundingArb, spot_to_perp
 from xge.models_trading import TradeSignal, Position
 from xge.trading.executor import TradeExecutor
 from xge.trading.position_manager import PositionManager
+
+if TYPE_CHECKING:
+    from xge.notifications.email import EmailNotifier
 
 logger = logging.getLogger("xge.trading.strategy")
 
@@ -27,6 +31,7 @@ class BasisTradeStrategy:
         exchanges: list[str],
         symbols: list[str],
         funding_poll_interval: int = 300,
+        notifier: EmailNotifier | None = None,
     ) -> None:
         self._cache = cache
         self._executor = executor
@@ -35,6 +40,7 @@ class BasisTradeStrategy:
         self._exchanges = exchanges
         self._symbols = symbols
         self._funding_poll_interval = funding_poll_interval
+        self._notifier = notifier
         self._running = False
         self._cycle_count = 0
 
@@ -151,6 +157,12 @@ class BasisTradeStrategy:
             arb.annualized_rate,
         )
 
+        if self._notifier:
+            try:
+                await asyncio.to_thread(self._notifier.send_trade_opened, position)
+            except Exception:
+                logger.exception("Failed to send trade opened notification")
+
     async def _check_exits(self) -> None:
         """Check all open positions for exit conditions."""
         positions = await self._pm.get_all_positions()
@@ -228,6 +240,12 @@ class BasisTradeStrategy:
             mode, position.symbol, position.exchange,
             position.realized_pnl, reason,
         )
+
+        if self._notifier:
+            try:
+                await asyncio.to_thread(self._notifier.send_trade_closed, position)
+            except Exception:
+                logger.exception("Failed to send trade closed notification")
 
     async def _log_pnl_summary(self) -> None:
         """Log a periodic P&L summary (realized + unrealized)."""
