@@ -84,7 +84,11 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
     load_dotenv()
 
     if config_path is None:
-        config_path = Path(__file__).parent.parent.parent / "config" / "settings.yaml"
+        # Try CWD first (works in Docker where WORKDIR=/app),
+        # fall back to source-relative path (works in local dev)
+        cwd_path = Path.cwd() / "config" / "settings.yaml"
+        src_path = Path(__file__).parent.parent.parent / "config" / "settings.yaml"
+        config_path = cwd_path if cwd_path.exists() else src_path
     config_path = Path(config_path)
 
     if not config_path.exists():
