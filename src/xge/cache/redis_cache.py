@@ -61,6 +61,30 @@ class RedisCache:
             return await self._redis.get(key)
         return None
 
+    async def get(self, key: str) -> str | None:
+        """Get a value by key."""
+        if self._redis:
+            return await self._redis.get(key)
+        return None
+
+    async def set(self, key: str, data: str, ex: int | None = None) -> None:
+        """Set a value by key with optional expiration in seconds."""
+        if self._redis:
+            await self._redis.set(key, data, ex=ex)
+
+    async def delete(self, key: str) -> None:
+        """Delete a key."""
+        if self._redis:
+            await self._redis.delete(key)
+
+    async def scan_keys(self, pattern: str) -> list[str]:
+        """Scan for keys matching a pattern."""
+        keys: list[str] = []
+        if self._redis:
+            async for key in self._redis.scan_iter(match=pattern):
+                keys.append(key)
+        return keys
+
     async def subscribe(self, pattern: str) -> AsyncIterator[dict]:
         """Subscribe to channels matching a pattern and yield messages."""
         if not self._redis:

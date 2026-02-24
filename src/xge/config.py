@@ -40,12 +40,26 @@ class FundingConfig:
 
 
 @dataclass
+class TradingConfig:
+    enabled: bool = False
+    paper_trading: bool = True
+    position_size_usdt: float = 100.0
+    min_entry_annualized_pct: float = 10.0
+    min_exit_annualized_pct: float = 3.0
+    max_positions_per_exchange: int = 3
+    max_total_positions: int = 10
+    check_interval: int = 60
+    exchanges: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Settings:
     exchanges: list[ExchangeConfig] = field(default_factory=list)
     symbols: list[str] = field(default_factory=list)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     redis: RedisConfig = field(default_factory=RedisConfig)
     funding: FundingConfig = field(default_factory=FundingConfig)
+    trading: TradingConfig = field(default_factory=TradingConfig)
 
     @property
     def enabled_exchanges(self) -> list[ExchangeConfig]:
@@ -114,10 +128,24 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         excluded_exchanges=list(funding_raw.get("excluded_exchanges", [])),
     )
 
+    trading_raw = raw.get("trading", {})
+    trading_config = TradingConfig(
+        enabled=bool(trading_raw.get("enabled", False)),
+        paper_trading=bool(trading_raw.get("paper_trading", True)),
+        position_size_usdt=float(trading_raw.get("position_size_usdt", 100.0)),
+        min_entry_annualized_pct=float(trading_raw.get("min_entry_annualized_pct", 10.0)),
+        min_exit_annualized_pct=float(trading_raw.get("min_exit_annualized_pct", 3.0)),
+        max_positions_per_exchange=int(trading_raw.get("max_positions_per_exchange", 3)),
+        max_total_positions=int(trading_raw.get("max_total_positions", 10)),
+        check_interval=int(trading_raw.get("check_interval", 60)),
+        exchanges=list(trading_raw.get("exchanges", [])),
+    )
+
     return Settings(
         exchanges=exchanges,
         symbols=symbols,
         logging=logging_config,
         redis=redis_config,
         funding=funding_config,
+        trading=trading_config,
     )

@@ -77,3 +77,14 @@ funding:
   min_cross_spread_pct: 0.005
   excluded_exchanges:
     - kraken
+
+trading:
+  enabled: false
+  paper_trading: true
+  position_size_usdt: 100.0
+  min_entry_annualized_pct: 10.0
+  min_exit_annualized_pct: 3.0
+  max_positions_per_exchange: 3
+  max_total_positions: 10
+  check_interval: 60
+  exchanges: []  # empty = all funding-enabled exchanges

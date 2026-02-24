@@ -200,6 +200,47 @@ async def run() -> None:
             await fc.connect()
             funding_collectors.append(fc)
 
+    # Basis trade strategy
+    trading_strategy = None
+    trading_executor = None
+    if settings.trading.enabled:
+        from xge.trading import TradeExecutor, PositionManager, BasisTradeStrategy
+
+        trading_executor = TradeExecutor(paper=settings.trading.paper_trading)
+        position_manager = PositionManager(
+            cache=cache,
+            max_positions_per_exchange=settings.trading.max_positions_per_exchange,
+            max_total_positions=settings.trading.max_total_positions,
+        )
+
+        # Determine which exchanges to trade on
+        if settings.trading.exchanges:
+            trading_exchange_ids = settings.trading.exchanges
+        else:
+            trading_exchange_ids = [
+                e.id for e in settings.enabled_exchanges
+                if e.id not in settings.funding.excluded_exchanges
+            ]
+
+        for eid in trading_exchange_ids:
+            await trading_executor.connect_exchange(eid)
+
+        trading_strategy = BasisTradeStrategy(
+            cache=cache,
+            executor=trading_executor,
+            position_manager=position_manager,
+            config=settings.trading,
+            exchanges=trading_exchange_ids,
+            symbols=settings.symbols,
+            funding_poll_interval=settings.funding.poll_interval,
+        )
+
+        mode = "PAPER" if settings.trading.paper_trading else "LIVE"
+        logger.info(
+            "Trading enabled [%s] on exchanges: %s",
+            mode, trading_exchange_ids,
+        )
+
     # Set up graceful shutdown
     stop_event = asyncio.Event()
 
@@ -248,6 +289,10 @@ async def run() -> None:
             )
         )
 
+    # Trading strategy task
+    if trading_strategy:
+        tasks.append(asyncio.create_task(trading_strategy.run()))
+
     # Wait for stop signal, then cancel everything
     await stop_event.wait()
 
@@ -256,6 +301,10 @@ async def run() -> None:
     await asyncio.gather(*tasks, return_exceptions=True)
 
     # Cleanup
+    if trading_strategy:
+        trading_strategy.stop()
+    if trading_executor:
+        await trading_executor.disconnect()
     for collector in collectors:
         await collector.disconnect()
     for fc in funding_collectors:
