@@ -83,11 +83,11 @@ funding:
 trading:
   enabled: true
   paper_trading: true
-  position_size_usdt: 100.0
+  position_size_usdt: 1000.0
   min_entry_annualized_pct: 10.0
   min_exit_annualized_pct: 3.0
-  max_positions_per_exchange: 10
-  max_total_positions: 50
+  max_positions_per_exchange: 1
+  max_total_positions: 3
   check_interval: 60
   exchanges:
     - okx
