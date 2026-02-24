@@ -74,7 +74,7 @@ async def log_spreads(
                 )
 
                 if spread.net_spread > 0:
-                    logger.warning(
+                    logger.debug(
                         "*** OPPORTUNITY *** %s %s -> %s: spread=%.4f%% net=%.4f%% "
                         "(buy@%s sell@%s) [%s]",
                         spread.symbol,
@@ -87,7 +87,7 @@ async def log_spreads(
                         depth,
                     )
                 else:
-                    logger.info(
+                    logger.debug(
                         "  %s -> %s: spread=%.4f%% net=%.4f%% "
                         "(buy@%s sell@%s) [%s]",
                         spread.buy_exchange,
@@ -123,7 +123,7 @@ async def log_funding_spreads(
             for exchange_id, entry in entries.items():
                 arb = SpotFundingArb.calculate(entry, min_annualized_pct)
                 if arb:
-                    logger.warning(
+                    logger.debug(
                         "*** FUNDING ARB *** %s on %s: %s rate=%.4f%% "
                         "annualized=%.2f%% (%s)",
                         arb.symbol,
@@ -143,7 +143,7 @@ async def log_funding_spreads(
                 if abs(spread.spread) < min_cross_spread_pct:
                     continue
 
-                logger.warning(
+                logger.debug(
                     "*** FUNDING SPREAD *** %s: %s(%.4f%%) -> %s(%.4f%%) "
                     "spread=%.6f annualized=%.2f%%",
                     spread.symbol,
