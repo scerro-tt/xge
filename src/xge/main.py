@@ -166,7 +166,11 @@ async def run() -> None:
 
     fee_map = {e.id: e.taker_fee_pct for e in settings.enabled_exchanges}
 
-    cache = RedisCache(host=settings.redis.host, port=settings.redis.port)
+    cache = RedisCache(
+        host=settings.redis.host,
+        port=settings.redis.port,
+        url=settings.redis.url,
+    )
     await cache.connect()
 
     collectors: list[WSPriceCollector] = []

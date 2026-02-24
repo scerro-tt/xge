@@ -18,6 +18,7 @@ class ExchangeConfig:
 
 @dataclass
 class RedisConfig:
+    url: str = ""
     host: str = "localhost"
     port: int = 6379
 
@@ -114,6 +115,7 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
 
     redis_raw = raw.get("redis", {})
     redis_config = RedisConfig(
+        url=_resolve_env_vars(str(redis_raw.get("url", ""))),
         host=_resolve_env_vars(str(redis_raw.get("host", "localhost"))),
         port=int(_resolve_env_vars(str(redis_raw.get("port", 6379)))),
     )

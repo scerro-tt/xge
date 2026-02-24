@@ -11,19 +11,25 @@ logger = logging.getLogger("xge.cache")
 class RedisCache:
     """Async Redis cache for price data with pub/sub support."""
 
-    def __init__(self, host: str = "localhost", port: int = 6379) -> None:
+    def __init__(self, host: str = "localhost", port: int = 6379, url: str = "") -> None:
+        self._url = url
         self._host = host
         self._port = port
         self._redis: aioredis.Redis | None = None
 
     async def connect(self) -> None:
-        self._redis = aioredis.Redis(
-            host=self._host,
-            port=self._port,
-            decode_responses=True,
-        )
-        await self._redis.ping()
-        logger.info("Connected to Redis at %s:%d", self._host, self._port)
+        if self._url:
+            self._redis = aioredis.from_url(self._url, decode_responses=True)
+            await self._redis.ping()
+            logger.info("Connected to Redis via URL")
+        else:
+            self._redis = aioredis.Redis(
+                host=self._host,
+                port=self._port,
+                decode_responses=True,
+            )
+            await self._redis.ping()
+            logger.info("Connected to Redis at %s:%d", self._host, self._port)
 
     async def close(self) -> None:
         if self._redis:

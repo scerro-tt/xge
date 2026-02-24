@@ -66,6 +66,7 @@ logging:
   min_net_spread: -0.05  # only log spreads with net_spread >= this value
 
 redis:
+  url: ${REDIS_URL:-}
   host: ${REDIS_HOST:-localhost}
   port: ${REDIS_PORT:-6379}
 

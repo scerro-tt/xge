@@ -1,0 +1,9 @@
+.env
+.env.example
+.venv/
+tests/
+.git/
+.gitignore
+*.md
+output.txt
+.DS_Store
