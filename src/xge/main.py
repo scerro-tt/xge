@@ -231,9 +231,12 @@ async def run() -> None:
         )
 
         # Reconcile stale positions from previous deploys
-        cleaned = await position_manager.reconcile_positions()
+        from xge.trading.tier_config import get_all_tier_symbols
+        cleaned = await position_manager.reconcile_positions(
+            valid_tier_symbols=get_all_tier_symbols(),
+        )
         if cleaned:
-            logger.warning("Reconciled %d stale positions from previous deploy", cleaned)
+            logger.warning("Reconciled %d stale/legacy positions from previous deploy", cleaned)
 
         # Determine which exchanges to trade on
         if settings.trading.exchanges:
