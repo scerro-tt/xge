@@ -28,19 +28,21 @@ exchanges:
     taker_fee_pct: 0.10
 
 symbols:
+  # Tier 1 — large caps
   - BTC/USDT
   - ETH/USDT
   - SOL/USDT
-  - DOGE/USDT
-  - AVAX/USDT
-  - LINK/USDT
   - XRP/USDT
+  # Tier 2 — mid caps
+  - WLD/USDT
+  - NEAR/USDT
+  - AVAX/USDT
+  # Monitored but not traded (blacklisted or untiered)
+  - DOGE/USDT
+  - LINK/USDT
   - ADA/USDT
   - ARB/USDT
-  - OP/USDT
-  - NEAR/USDT
   - APT/USDT
-  - WLD/USDT
   - PENDLE/USDT
   - SEI/USDT
 
@@ -73,11 +75,11 @@ notifications:
 trading:
   enabled: true
   paper_trading: true
-  position_size_usdt: 1000.0
+  position_size_usdt: 315.0    # Tier 1 default (overridden by tier_config)
   min_entry_annualized_pct: 10.0
   min_exit_annualized_pct: 3.0
-  max_positions_per_exchange: 1
-  max_total_positions: 3
+  max_positions_per_exchange: 4
+  max_total_positions: 6        # Tier 1 (4) + Tier 2 (2)
   check_interval: 60
   exchanges:
     - okx

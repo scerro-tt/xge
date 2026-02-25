@@ -74,6 +74,8 @@ class Position:
     closed_at: float = 0.0
     realized_pnl: float = 0.0
     paper: bool = True
+    tier: str = ""  # "tier_1", "tier_2", or ""
+    exit_reason: str = ""  # funding_drop, funding_negative, stop_loss, reserve_protection, manual
 
     def __post_init__(self) -> None:
         if self.opened_at == 0.0:

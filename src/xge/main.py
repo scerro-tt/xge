@@ -219,8 +219,9 @@ async def run() -> None:
     # Basis trade strategy
     trading_strategy = None
     trading_executor = None
+    delta_monitor = None
     if settings.trading.enabled:
-        from xge.trading import TradeExecutor, PositionManager, BasisTradeStrategy
+        from xge.trading import TradeExecutor, PositionManager, BasisTradeStrategy, DeltaMonitor
 
         trading_executor = TradeExecutor(paper=settings.trading.paper_trading)
         position_manager = PositionManager(
@@ -253,6 +254,12 @@ async def run() -> None:
             notifier = EmailNotifier(settings.notifications)
             logger.info("Email notifications enabled (to: %s)", settings.notifications.to_email)
 
+        # Delta monitor
+        delta_monitor = DeltaMonitor(
+            cache=cache,
+            position_manager=position_manager,
+        )
+
         trading_strategy = BasisTradeStrategy(
             cache=cache,
             executor=trading_executor,
@@ -262,6 +269,7 @@ async def run() -> None:
             symbols=settings.symbols,
             funding_poll_interval=settings.funding.poll_interval,
             notifier=notifier,
+            delta_monitor=delta_monitor,
         )
 
         mode = "PAPER" if settings.trading.paper_trading else "LIVE"
@@ -318,9 +326,11 @@ async def run() -> None:
             )
         )
 
-    # Trading strategy task
+    # Trading strategy task + delta monitor
     if trading_strategy:
         tasks.append(asyncio.create_task(trading_strategy.run()))
+    if delta_monitor:
+        tasks.append(asyncio.create_task(delta_monitor.run()))
 
     # Wait for stop signal, then cancel everything
     await stop_event.wait()
@@ -330,6 +340,8 @@ async def run() -> None:
     await asyncio.gather(*tasks, return_exceptions=True)
 
     # Cleanup
+    if delta_monitor:
+        delta_monitor.stop()
     if trading_strategy:
         trading_strategy.stop()
     if trading_executor:
