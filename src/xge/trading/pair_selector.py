@@ -15,9 +15,9 @@ from xge.trading.tier_config import get_tier_for_symbol, BLACKLIST
 logger = logging.getLogger("xge.trading.pair_selector")
 
 # ── Thresholds ──────────────────────────────────────────────────────
-MIN_FUNDING_RATE = 0.0001          # 0.01% per period
-MIN_CONSECUTIVE_POSITIVE_DAYS = 7
-MAX_SPREAD = 0.0005                # 0.05%
+MIN_FUNDING_RATE = 0.00006         # 0.006% per period
+MIN_CONSECUTIVE_POSITIVE_DAYS = 3
+MAX_SPREAD = 0.001                 # 0.1%
 MIN_VOLUME_24H = 5_000_000        # USDT
 MAX_OI_DROP_PCT = 0.10             # 10% max drop allowed
 
@@ -76,9 +76,9 @@ async def validate_pair(
         result["reasons"].append(f"Failed to fetch funding rate: {e}")
         return result
 
-    # ── 2. 7-day funding history ────────────────────────────────────
+    # ── 2. 3-day funding history (allow up to 1 negative) ───────────
     try:
-        since_ms = int((time() - 7 * 86400) * 1000)
+        since_ms = int((time() - MIN_CONSECUTIVE_POSITIVE_DAYS * 86400) * 1000)
         history = await exchange.fetch_funding_rate_history(
             perp_symbol, since=since_ms, limit=100,
         )
@@ -86,20 +86,21 @@ async def validate_pair(
             rates = [float(h.get("fundingRate", 0)) for h in history]
             result["funding_7d_avg"] = sum(rates) / len(rates)
 
-            # Check all positive in last 7 days
-            # Each day has ~3 funding periods, so 7 days = ~21 entries
-            if len(rates) >= 21:
-                last_21 = rates[-21:]
+            # Check last 3 days (~9 funding periods), allow at most 1 negative
+            expected_periods = MIN_CONSECUTIVE_POSITIVE_DAYS * 3  # 9
+            if len(rates) >= expected_periods:
+                recent = rates[-expected_periods:]
             else:
-                last_21 = rates
+                recent = rates
 
-            all_positive = all(r > 0 for r in last_21)
-            if not all_positive:
+            negative_count = sum(1 for r in recent if r <= 0)
+            max_negative_allowed = 1
+            if negative_count > max_negative_allowed:
                 result["approved"] = False
-                negative_count = sum(1 for r in last_21 if r <= 0)
                 result["reasons"].append(
-                    f"Funding not positive for 7 consecutive days "
-                    f"({negative_count}/{len(last_21)} non-positive)"
+                    f"Too many non-positive funding periods "
+                    f"({negative_count}/{len(recent)} non-positive, "
+                    f"max {max_negative_allowed} allowed)"
                 )
         else:
             result["approved"] = False

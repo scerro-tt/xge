@@ -37,12 +37,13 @@ symbols:
   - WLD/USDT
   - NEAR/USDT
   - AVAX/USDT
-  # Monitored but not traded (blacklisted or untiered)
+  # Tier 3 — altcoins (small size)
   - DOGE/USDT
   - LINK/USDT
   - ADA/USDT
   - ARB/USDT
   - APT/USDT
+  # Monitored but not traded (untiered)
   - PENDLE/USDT
   - SEI/USDT
 
@@ -76,10 +77,10 @@ trading:
   enabled: true
   paper_trading: true
   position_size_usdt: 315.0    # Tier 1 default (overridden by tier_config)
-  min_entry_annualized_pct: 10.0
+  min_entry_annualized_pct: 8.0
   min_exit_annualized_pct: 3.0
   max_positions_per_exchange: 4
-  max_total_positions: 6        # Tier 1 (4) + Tier 2 (2)
+  max_total_positions: 8        # Tier 1 (4) + Tier 2 (2) + Tier 3 (2)
   check_interval: 60
   exchanges:
     - okx

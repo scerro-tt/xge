@@ -10,7 +10,7 @@ from xge.trading.tier_config import get_fees
 # Funding periods per day (8h intervals)
 PERIODS_PER_DAY = 3
 # Maximum acceptable breakeven in funding periods (24h = 3 periods)
-MAX_BREAKEVEN_PERIODS = 3 * PERIODS_PER_DAY  # 9 periods = 3 days
+MAX_BREAKEVEN_PERIODS = 5 * PERIODS_PER_DAY  # 15 periods = 5 days
 
 
 def calculate_breakeven(

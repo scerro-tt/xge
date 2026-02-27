@@ -5,7 +5,7 @@ from __future__ import annotations
 # ── Capital allocation ──────────────────────────────────────────────
 CAPITAL_CONFIG = {
     "total": 2000,
-    "operative": 1800,
+    "operative": 1820,
     "reserve_rebalance": 200,   # never touched except emergency
     "stable_buffer": 180,       # for position rebalancing
 }
@@ -17,7 +17,7 @@ TIER_1 = {
     "capital_total": 1260,
     "size_per_pair": 315,       # 1260 / 4
     "max_pairs_open": 4,
-    "min_funding_rate": 0.00008,
+    "min_funding_rate": 0.00006,
     "stop_loss_pct": 0.005,     # 0.5% of size_per_pair
     "delta_alert_pct": 0.02,    # 2% drift threshold
 }
@@ -28,12 +28,23 @@ TIER_2 = {
     "capital_total": 360,
     "size_per_pair": 180,       # max 2 open simultaneously
     "max_pairs_open": 2,
-    "min_funding_rate": 0.00015,
+    "min_funding_rate": 0.00010,
     "stop_loss_pct": 0.005,
     "delta_alert_pct": 0.02,
 }
 
-TIERS = [TIER_1, TIER_2]
+TIER_3 = {
+    "name": "tier_3",
+    "symbols": ["DOGE/USDT", "LINK/USDT", "ADA/USDT", "ARB/USDT", "APT/USDT"],
+    "capital_total": 200,
+    "size_per_pair": 100,
+    "max_pairs_open": 2,
+    "min_funding_rate": 0.0002,
+    "stop_loss_pct": 0.005,
+    "delta_alert_pct": 0.02,
+}
+
+TIERS = [TIER_1, TIER_2, TIER_3]
 
 BLACKLIST = ["ATOM/USDT", "DOT/USDT", "OP/USDT", "AAVE/USDT"]
 
